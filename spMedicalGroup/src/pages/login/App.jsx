@@ -1,32 +1,99 @@
-import logo from './logo.svg';
-import './App.css';
+import { Component } from "react";
+import axios from "axios";
+import { parseJwt, usuarioAutenticado } from '../../services/auth/auth';
+import { Link } from 'react-router-dom';
 
-function App() {
-  return (
-    <div>
-      <main class="flex">
+import logo from '../../assets/logo-login.png';
 
-        <div class="banner-login" src="../assets/banner-login.png" alt="Banner"></div>
+export default class Login extends Component {
+  
+  constructor(props) {
+    super(props)
+    this.state = {
+      email: 'roberto.possarle@spmedicalgroup.com.br',
+      senha: '1234',
+      erroMensagem: '',
+      isLoading: false
+    }
+  }
 
-        <div class="caixa-login">
-          <img src="../assets/logo-login.png" alt="Logo SP Medical Group" />
+  efetuaLogin = (event) => {
+    event.preventDefault();
 
-          <form>
-            <div class="form-login">
-              <input type="text" placeholder="Email" name="" id="" />
-              <input type="text" placeholder="Senha" name="" id="" />
+    this.setState({ erroMensagem: '', isLoading: true });
 
-              <a href="#">Esqueceu a senha?</a>
 
-              <button type="submit">Login</button>
-            </div>
-          </form>
+    axios.post('http://localhost:5000/api/login', {
+      email: this.state.email,
+      senha: this.state.senha
+    })
 
-        </div>
+      .then(resposta => {
+        if (resposta.status == 200) {
 
-      </main>
-    </div>
-  );
+          localStorage.setItem('usuario-login', resposta.data.token);
+
+          this.setState({ isLoading: false });
+
+          console.log("Login efetuado!")
+          this.props.history.push('/');
+
+        }
+      })
+      .catch(() => {
+        // define o valor do state erroMensagem com uma mensagem personalizada
+        this.setState({ erroMensagem: 'E-mail e/ou senha inválidos!', isLoading: false })
+      })
+
+  }
+
+  atualizaStateCampo = (campo) => {
+    this.setState({ [campo.target.name]: campo.target.value })
+    console.log(`${this.state.email} + ${this.state.senha}`)
+  };
+
+  render() {
+    return (
+      <div>
+        <main className="flex">
+
+          <div className="banner-login" src="../assets/banner-login.png" alt="Banner"></div>
+
+          <div className="caixa-login">
+            <img src={logo} alt="Logo SP Medical Group" />
+
+            <form onSubmit={this.efetuaLogin}>
+              <div className="form-login">
+                <input
+                  type="text"
+                  placeholder="Email"
+                  name="email"
+                  value={this.state.email}
+                  onChange={this.atualizaStateCampo}
+                />
+
+                <input type="text" placeholder="Senha" name="senha" value={this.state.senha} onChange={this.atualizaStateCampo} />
+
+                <a href="http://localhost:3000/">Esqueceu a senha?</a>
+
+                {
+                  this.state.isLoading === true &&
+                  <button type="submit" disabled>Loading...</button>
+                }
+
+                {
+                  this.state.isLoading === false &&
+                  <button type="submit">Login</button>
+                }
+
+                <p style={{ color: 'red' }} >{this.state.erroMensagem}</p>
+              </div>
+            </form>
+
+          </div>
+
+        </main>
+      </div >
+    )
+  }
 }
-
-export default App;
